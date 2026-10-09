@@ -378,13 +378,14 @@ define(['N/record', 'N/format', 'N/log', 'N/search', 'N/query'], function (recor
   // }
 function doGet(context) {
 var queries = {
-  vendor_custom: `SELECT id, custentity_paymentmethod FROM vendor ORDER BY id`,
-  vendor_full: `SELECT v.id, v.entityid, v.externalid, v.companyname, v.altname,
-    v.email, v.phone, v.isinactive, v.subsidiary, v.currency,
-    v.terms, v.category, v.datecreated, v.lastmodifieddate,
-    v.defaultbillingaddress, v.is1099eligible,
-    v.custentity_paymentmethod FROM vendor v ORDER BY v.id`,
-  address_test: `SELECT nkey, addressee, addr1, city, state, zip, country FROM entityaddress`
+  vendor_extra1: `SELECT id, externalid, altname, isinactive, currency, terms, category FROM vendor`,
+  vendor_extra2: `SELECT id, datecreated, lastmodifieddate, defaultbillingaddress, is1099eligible FROM vendor`,
+  address_count: `SELECT COUNT(*) AS total FROM vendoraddressbook`,
+  address_entity_count: `SELECT COUNT(*) AS total FROM vendoraddressbookentityaddress`,
+  vendor_address_join: `SELECT v.id, v.entityid, vab.internalid AS address_id
+    FROM vendor v
+    LEFT JOIN vendoraddressbook vab ON vab.entity = v.id
+    WHERE v.id = 1674`
 };
 
   var result = {};
