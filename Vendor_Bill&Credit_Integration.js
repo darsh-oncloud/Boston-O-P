@@ -376,16 +376,12 @@ define(['N/record', 'N/format', 'N/log', 'N/search', 'N/query'], function (recor
   //     Params: context || {}
   //   };
   // }
-  function doGet(context) {
-  var vendorId = Number(context && context.vendor_id);
-  if (!Number.isSafeInteger(vendorId) || vendorId <= 0) return { Status: 'failed', Message: 'Valid vendor_id required' };
-
+function doGet(context) {
   var queries = {
     vendor: `SELECT v.id, v.entityid, v.externalid, v.companyname, v.altname, v.email, v.phone, v.isinactive,
       v.subsidiary, v.currency, v.terms, v.category, v.datecreated, v.lastmodifieddate,
-      v.defaultbillingaddress, v.is1099eligible,
-      v.custentity_vb_ext_id_method_payment, v.custentity_paymentmethod
-      FROM vendor v WHERE v.id = ?`,
+      v.defaultbillingaddress, v.is1099eligible, v.custentity_vb_ext_id_method_payment,
+      v.custentity_paymentmethod FROM vendor v ORDER BY v.id`,
 
     addresses: `SELECT vab.entity AS vendor_id, vab.internalid AS address_id, vab.label,
       vab.defaultbilling, vab.defaultshipping, vabea.addressee, vabea.attention,
@@ -393,32 +389,45 @@ define(['N/record', 'N/format', 'N/log', 'N/search', 'N/query'], function (recor
       vabea.zip, vabea.country, vabea.addrphone
       FROM vendoraddressbook vab
       INNER JOIN vendoraddressbookentityaddress vabea ON vabea.nkey = vab.addressbookaddress
-      WHERE vab.entity = ? ORDER BY vab.internalid`,
+      ORDER BY vab.entity, vab.internalid`,
 
-    subsidiaries: `SELECT entity, subsidiary FROM VendorSubsidiaryRelationship
-      WHERE entity = ? ORDER BY subsidiary`
+    subsidiaries: `SELECT entity, subsidiary
+      FROM VendorSubsidiaryRelationship ORDER BY entity, subsidiary`
   };
 
-  var result = { vendor_id: vendorId, results: {} };
+  var result = {};
 
   for (var key in queries) {
     try {
-      var data = query.runSuiteQL({
+      var paged = query.runSuiteQLPaged({
         query: queries[key],
-        params: [vendorId],
+        pageSize: 100,
         metaDataProvider: 'SUITE_QL'
-      }).asMappedResults();
+      });
 
-      result.results[key] = { status: 'success', count: data.length, data: data };
-      log.audit('SuiteQL Success - ' + key, { vendorId: vendorId, count: data.length });
+      var data = paged.pageRanges.length
+        ? paged.fetch({ index: 0 }).data.asMappedResults()
+        : [];
+
+      result[key] = {
+        status: 'success',
+        totalCount: paged.count,
+        data: data
+      };
+
+      log.audit('SuiteQL ' + key, { totalCount: paged.count });
 
     } catch (e) {
-      result.results[key] = { status: 'failed', error: e.message };
-      log.error('SuiteQL Failed - ' + key, e);
+      result[key] = {
+        status: 'failed',
+        error: e.message
+      };
+
+      log.error('SuiteQL Error - ' + key, e);
     }
   }
 
-  return result;
+  return JSON.stringify(result);
 }
 
   return {
