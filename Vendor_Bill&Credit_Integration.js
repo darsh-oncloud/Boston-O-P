@@ -3,7 +3,7 @@
  * @NScriptType Restlet
  * @NModuleScope SameAccount
  */
-define(['N/record', 'N/format', 'N/log', 'N/search', 'N/query'], function (record, format, log, search, query) {
+define(['N/record', 'N/format', 'N/log', 'N/search'], function (record, format, log, search) {
 
   function isEmpty(v) {
     return v === null || v === undefined || String(v).trim() === '';
