@@ -3,7 +3,7 @@
  * @NScriptType Restlet
  * @NModuleScope SameAccount
  */
-define(['N/record', 'N/format', 'N/log', 'N/search'], function (record, format, log, search) {
+define(['N/record', 'N/format', 'N/log', 'N/search', 'N/query'], function (record, format, log, search, query) {
 
   function isEmpty(v) {
     return v === null || v === undefined || String(v).trim() === '';
@@ -368,14 +368,58 @@ define(['N/record', 'N/format', 'N/log', 'N/search'], function (record, format, 
     }
   }
 
+  // function doGet(context) {
+  //   return {
+  //     Status: 'success',
+  //     Code: 200,
+  //     Message: 'success GET',
+  //     Params: context || {}
+  //   };
+  // }
   function doGet(context) {
-    return {
-      Status: 'success',
-      Code: 200,
-      Message: 'success GET',
-      Params: context || {}
-    };
+  var vendorId = Number(context && context.vendor_id);
+  if (!Number.isSafeInteger(vendorId) || vendorId <= 0) return { Status: 'failed', Message: 'Valid vendor_id required' };
+
+  var queries = {
+    vendor: `SELECT v.id, v.entityid, v.externalid, v.companyname, v.altname, v.email, v.phone, v.isinactive,
+      v.subsidiary, v.currency, v.terms, v.category, v.datecreated, v.lastmodifieddate,
+      v.defaultbillingaddress, v.is1099eligible,
+      v.custentity_vb_ext_id_method_payment, v.custentity_paymentmethod
+      FROM vendor v WHERE v.id = ?`,
+
+    addresses: `SELECT vab.entity AS vendor_id, vab.internalid AS address_id, vab.label,
+      vab.defaultbilling, vab.defaultshipping, vabea.addressee, vabea.attention,
+      vabea.addr1, vabea.addr2, vabea.addr3, vabea.city, vabea.state,
+      vabea.zip, vabea.country, vabea.addrphone
+      FROM vendoraddressbook vab
+      INNER JOIN vendoraddressbookentityaddress vabea ON vabea.nkey = vab.addressbookaddress
+      WHERE vab.entity = ? ORDER BY vab.internalid`,
+
+    subsidiaries: `SELECT entity, subsidiary FROM VendorSubsidiaryRelationship
+      WHERE entity = ? ORDER BY subsidiary`
+  };
+
+  var result = { vendor_id: vendorId, results: {} };
+
+  for (var key in queries) {
+    try {
+      var data = query.runSuiteQL({
+        query: queries[key],
+        params: [vendorId],
+        metaDataProvider: 'SUITE_QL'
+      }).asMappedResults();
+
+      result.results[key] = { status: 'success', count: data.length, data: data };
+      log.audit('SuiteQL Success - ' + key, { vendorId: vendorId, count: data.length });
+
+    } catch (e) {
+      result.results[key] = { status: 'failed', error: e.message };
+      log.error('SuiteQL Failed - ' + key, e);
+    }
   }
+
+  return result;
+}
 
   return {
     get: doGet,
