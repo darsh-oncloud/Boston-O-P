@@ -377,23 +377,12 @@ define(['N/record', 'N/format', 'N/log', 'N/search', 'N/query'], function (recor
   //   };
   // }
 function doGet(context) {
-  var queries = {
-    vendor: `SELECT v.id, v.entityid, v.externalid, v.companyname, v.altname, v.email, v.phone, v.isinactive,
-      v.subsidiary, v.currency, v.terms, v.category, v.datecreated, v.lastmodifieddate,
-      v.defaultbillingaddress, v.is1099eligible, v.custentity_vb_ext_id_method_payment,
-      v.custentity_paymentmethod FROM vendor v ORDER BY v.id`,
-
-    addresses: `SELECT vab.entity AS vendor_id, vab.internalid AS address_id, vab.label,
-      vab.defaultbilling, vab.defaultshipping, vabea.addressee, vabea.attention,
-      vabea.addr1, vabea.addr2, vabea.addr3, vabea.city, vabea.state,
-      vabea.zip, vabea.country, vabea.addrphone
-      FROM vendoraddressbook vab
-      INNER JOIN vendoraddressbookentityaddress vabea ON vabea.nkey = vab.addressbookaddress
-      ORDER BY vab.entity, vab.internalid`,
-
-    subsidiaries: `SELECT entity, subsidiary
-      FROM VendorSubsidiaryRelationship ORDER BY entity, subsidiary`
-  };
+var queries = {
+  vendor_basic: `SELECT id, entityid FROM vendor ORDER BY id`,
+  vendor_standard: `SELECT id, entityid, companyname, email, phone, subsidiary FROM vendor ORDER BY id`,
+  vendor_custom: `SELECT id, custentity_vb_ext_id_method_payment, custentity_paymentmethod FROM vendor ORDER BY id`,
+  address_basic: `SELECT entity, internalid, label, addressbookaddress FROM vendoraddressbook ORDER BY entity, internalid`
+};
 
   var result = {};
 
