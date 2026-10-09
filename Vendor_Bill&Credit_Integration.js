@@ -378,10 +378,13 @@ define(['N/record', 'N/format', 'N/log', 'N/search', 'N/query'], function (recor
   // }
 function doGet(context) {
 var queries = {
-  vendor_basic: `SELECT id, entityid FROM vendor ORDER BY id`,
-  vendor_standard: `SELECT id, entityid, companyname, email, phone, subsidiary FROM vendor ORDER BY id`,
-  vendor_custom: `SELECT id, custentity_vb_ext_id_method_payment, custentity_paymentmethod FROM vendor ORDER BY id`,
-  address_basic: `SELECT entity, internalid, label, addressbookaddress FROM vendoraddressbook ORDER BY entity, internalid`
+  vendor_custom: `SELECT id, custentity_paymentmethod FROM vendor ORDER BY id`,
+  vendor_full: `SELECT v.id, v.entityid, v.externalid, v.companyname, v.altname,
+    v.email, v.phone, v.isinactive, v.subsidiary, v.currency,
+    v.terms, v.category, v.datecreated, v.lastmodifieddate,
+    v.defaultbillingaddress, v.is1099eligible,
+    v.custentity_paymentmethod FROM vendor v ORDER BY v.id`,
+  address_test: `SELECT nkey, addressee, addr1, city, state, zip, country FROM entityaddress`
 };
 
   var result = {};
