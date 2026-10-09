@@ -368,62 +368,14 @@ define(['N/record', 'N/format', 'N/log', 'N/search', 'N/query'], function (recor
     }
   }
 
-  // function doGet(context) {
-  //   return {
-  //     Status: 'success',
-  //     Code: 200,
-  //     Message: 'success GET',
-  //     Params: context || {}
-  //   };
-  // }
-function doGet(context) {
-var queries = {
-  vendor: `SELECT id, entityid, externalid, companyname, altname, email, phone,
-    isinactive, subsidiary, currency, terms, category, datecreated,
-    lastmodifieddate, defaultbillingaddress, is1099eligible
-    FROM vendor ORDER BY id`,
-
-  address_alternative: `SELECT entity, internalid, addressbookaddress,
-    defaultbilling, defaultshipping
-    FROM entityAddressbook`,
-
-  subsidiaries: `SELECT entity, subsidiary
-    FROM VendorSubsidiaryRelationship ORDER BY entity, subsidiary`
-};
-  var result = {};
-
-  for (var key in queries) {
-    try {
-      var paged = query.runSuiteQLPaged({
-        query: queries[key],
-        pageSize: 100,
-        metaDataProvider: 'SUITE_QL'
-      });
-
-      var data = paged.pageRanges.length
-        ? paged.fetch({ index: 0 }).data.asMappedResults()
-        : [];
-
-      result[key] = {
-        status: 'success',
-        totalCount: paged.count,
-        data: data
-      };
-
-      log.audit('SuiteQL ' + key, { totalCount: paged.count });
-
-    } catch (e) {
-      result[key] = {
-        status: 'failed',
-        error: e.message
-      };
-
-      log.error('SuiteQL Error - ' + key, e);
-    }
+  function doGet(context) {
+    return {
+      Status: 'success',
+      Code: 200,
+      Message: 'success GET',
+      Params: context || {}
+    };
   }
-
-  return JSON.stringify(result);
-}
 
   return {
     get: doGet,
