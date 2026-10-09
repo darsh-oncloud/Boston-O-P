@@ -378,15 +378,18 @@ define(['N/record', 'N/format', 'N/log', 'N/search', 'N/query'], function (recor
   // }
 function doGet(context) {
 var queries = {
-  vendor: `SELECT id AS vendor_id FROM vendor ORDER BY id`,
+  vendor: `SELECT id, entityid, externalid, companyname, altname, email, phone,
+    isinactive, subsidiary, currency, terms, category, datecreated,
+    lastmodifieddate, defaultbillingaddress, is1099eligible
+    FROM vendor ORDER BY id`,
 
-  addresses: `SELECT entity AS vendor_id, internalid AS address_id
-    FROM vendoraddressbook ORDER BY entity, internalid`,
+  address_alternative: `SELECT entity, internalid, addressbookaddress,
+    defaultbilling, defaultshipping
+    FROM entityAddressbook`,
 
-  subsidiaries: `SELECT entity AS vendor_id, subsidiary AS subsidiary_id
+  subsidiaries: `SELECT entity, subsidiary
     FROM VendorSubsidiaryRelationship ORDER BY entity, subsidiary`
 };
-
   var result = {};
 
   for (var key in queries) {
